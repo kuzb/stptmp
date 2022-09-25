@@ -1,0 +1,17 @@
+{
+  "importMap": "imports.json",
+  "tasks": {
+    "install": "deno install --allow-read --allow-write --allow-run --allow-env --allow-net --unstable -n stptmp mod.ts",
+    "dev": "DEVELOPMENT=true deno run --allow-read --allow-write --allow-run --allow-env --allow-net --unstable mod.ts"
+    "review": "deno lint && deno fmt --check",
+    "format": "deno fmt"
+  },
+  "fmt": {
+    "options": {
+      "indentWidth": 2,
+      "lineWidth": 110,
+      "singleQuote": true,
+      "useTabs": false
+    }
+  }
+}
