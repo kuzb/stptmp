@@ -1,4 +1,4 @@
-import DevelopmentError from "/libs/DevelopmentError.ts";
+import DevelopmentError from '/libs/DevelopmentError.ts';
 
 class NpmUtil {
   static async installPackages() {
@@ -10,7 +10,7 @@ class NpmUtil {
 
     const { code } = await process.status();
 
-    if (code !== 0) throw new DevelopmentError('Failed when installing packages');
+    if (code !== 0) throw new DevelopmentError(new TextDecoder().decode(await process.stderrOutput()));
   }
 }
 

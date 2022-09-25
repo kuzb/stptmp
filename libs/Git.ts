@@ -33,7 +33,7 @@ class Git extends OctokitCore {
 
     const { code } = await process.status();
 
-    if (code !== 0) throw new DevelopmentError('Failed when cloning repository');
+    if (code !== 0) throw new DevelopmentError(new TextDecoder().decode(await process.stderrOutput()));
   }
 }
 

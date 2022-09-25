@@ -12,6 +12,18 @@ class FileUtil {
       return false;
     }
   }
+
+  static existsSync(base: string): boolean {
+    const path = isAbsolute(base) ? base : join(Deno.cwd(), base);
+
+    try {
+      Deno.statSync(path);
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export default FileUtil;

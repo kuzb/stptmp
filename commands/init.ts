@@ -2,6 +2,7 @@ import { Command, Input, Select } from 'cliffy';
 import { join } from 'std/path';
 
 import Git, { Repos } from '/libs/Git.ts';
+import Cache from '/libs/Cache.ts';
 import ProcessUtil from '/utils/ProcessUtil.ts';
 import FileUtil from '/utils/FileUtil.ts';
 import NpmUtil from '/utils/NpmUtil.ts';
@@ -13,16 +14,34 @@ const status = {
 
 const init = async () => {
   const octokit = new Git({ auth: Deno.env.get('GITHUB_PACKAGES_TOKEN') });
+  const cache = new Cache();
 
-  let templates: Repos;
+  let templates: Repos | undefined = undefined;
 
   await ProcessUtil.run(async () => {
-    templates = await octokit.listTemplates();
+    const { data, fresh } = await cache.get<Repos>('templates') || { data: [], fresh: false };
+
+    if (fresh) {
+      templates = data;
+    } else return 'warn';
   }, {
-    startText: 'Fetching templates...',
-    successText: 'Fetched templates.',
-    failText: 'Failed to fetch templates.',
+    startText: 'Fetching templates from cache...',
+    successText: 'Fetched templates from cache.',
+    warnText: 'Cache is expired/empty.',
+    failText: 'Failed to fetch templates from cache.',
   });
+
+  if (!templates) {
+    await ProcessUtil.run(async () => {
+      templates = await octokit.listTemplates();
+
+      await cache.set('templates', templates);
+    }, {
+      startText: 'Fetching templates...',
+      successText: 'Fetched templates.',
+      failText: 'Failed to fetch templates.',
+    });
+  }
 
   const options = templates!.map(({ name, description, private: isPrivate, ssh_url }) => ({
     name: `${isPrivate ? status.private : status.public} ${name}: ${description}`,
@@ -35,10 +54,11 @@ const init = async () => {
   });
 
   const name = await Input.prompt('Project name:');
-  const path = join(Deno.cwd(), name);
+  if (!name) throw new Error('Project name is missing.');
 
+  const path = join(Deno.cwd(), name);
   const exists = await FileUtil.exists(path);
-  if (exists) throw new Error(`${name} already exists`);
+  if (exists) throw new Error(`Name: ${name} already exists.`);
 
   await ProcessUtil.run(async () => {
     await octokit.clone(url, name);

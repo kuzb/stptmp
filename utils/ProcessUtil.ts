@@ -1,17 +1,25 @@
 import { green, red } from 'std/fmt/colors';
 import { wait } from 'wait';
 
+type Status = 'warn' | 'fail' | 'success' | 'start';
+
 class ProcessUtil {
   static async run(
-    callback: () => Promise<void>,
-    { startText, successText, failText }: { startText: string; successText: string; failText: string },
+    callback: () => Promise<void | Status>,
+    { startText, successText, failText, warnText }: {
+      startText: string;
+      successText: string;
+      failText: string;
+      warnText?: string;
+    },
   ) {
     const spinner = wait(green(startText)).start();
 
     try {
-      await callback();
+      const status = await callback() || { text: successText, status: 'success' };
 
-      spinner.succeed(successText);
+      if (status === 'warn') spinner.warn(warnText);
+      else spinner.succeed(successText);
     } catch (error) {
       spinner.fail(red(failText));
 
