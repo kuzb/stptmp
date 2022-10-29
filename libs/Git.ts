@@ -35,6 +35,32 @@ class Git extends OctokitCore {
 
     if (code !== 0) throw new DevelopmentError(new TextDecoder().decode(await process.stderrOutput()));
   }
+
+  async init(): Promise<void> {
+    const initProcess = Deno.run({
+      cmd: ['git', 'init'],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+
+    const { code: initCode } = await initProcess.status();
+
+    if (initCode !== 0) {
+      throw new DevelopmentError(new TextDecoder().decode(await initProcess.stderrOutput()));
+    }
+
+    const commitProcess = Deno.run({
+      cmd: ['git', 'commit', '-m', 'chore: initialize project'],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+
+    const { code: commitCode } = await commitProcess.status();
+
+    if (commitCode !== 0) {
+      throw new DevelopmentError(new TextDecoder().decode(await commitProcess.stderrOutput()));
+    }
+  }
 }
 
 export default Git;

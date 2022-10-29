@@ -3,7 +3,7 @@ import { join } from 'std/path';
 
 import Git, { Repos } from '/libs/Git.ts';
 import Cache from '/libs/Cache.ts';
-import ProcessUtil from '/utils/ProcessUtil.ts';
+import ProcessUtil, { Result } from '/utils/ProcessUtil.ts';
 import FileUtil from '/utils/FileUtil.ts';
 import PackageUtil from '/utils/PackageUtil.ts';
 
@@ -23,11 +23,10 @@ const init = async () => {
 
     if (fresh) {
       templates = data;
-    } else return 'warn';
+    } else return new Result('warning', 'Cache is expired/empty.');
   }, {
     startText: 'Fetching templates from cache...',
     successText: 'Fetched templates from cache.',
-    warnText: 'Cache is expired/empty.',
     failText: 'Failed to fetch templates from cache.',
   });
 
@@ -64,9 +63,7 @@ const init = async () => {
   const exists = await FileUtil.exists(path);
   if (exists) throw new Error(`Name: ${name} already exists.`);
 
-  await ProcessUtil.run(async () => {
-    await octokit.clone(url, name);
-  }, {
+  await ProcessUtil.run(async () => await octokit.clone(url, name), {
     startText: 'Cloning repository...',
     successText: 'Cloned repository.',
     failText: 'Failed to clone repository.',
@@ -76,9 +73,13 @@ const init = async () => {
 
   await Deno.remove('.git', { recursive: true });
 
-  await ProcessUtil.run(async () => {
-    await PackageUtil.installPackages();
-  }, {
+  await ProcessUtil.run(async () => await octokit.init(), {
+    startText: 'Initializing repository...',
+    successText: 'Initialized repository.',
+    failText: 'Failed to initialize repository.',
+  });
+
+  await ProcessUtil.run(async () => await PackageUtil.installPackages(), {
     startText: 'Installing dependencies...',
     successText: 'Installed dependencies.',
     failText: 'Failed to install dependencies.',
