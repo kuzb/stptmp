@@ -5,7 +5,7 @@ import Git, { Repos } from '/libs/Git.ts';
 import Cache from '/libs/Cache.ts';
 import ProcessUtil from '/utils/ProcessUtil.ts';
 import FileUtil from '/utils/FileUtil.ts';
-import NpmUtil from '/utils/NpmUtil.ts';
+import PackageUtil from '/utils/PackageUtil.ts';
 
 const status = {
   public: '',
@@ -51,6 +51,10 @@ const init = async () => {
   const url = await Select.prompt({
     message: 'Select a template:',
     options,
+    keys: {
+      next: ['j', 'down'],
+      previous: ['k', 'up'],
+    },
   });
 
   const name = await Input.prompt('Project name:');
@@ -73,7 +77,7 @@ const init = async () => {
   await Deno.remove('.git', { recursive: true });
 
   await ProcessUtil.run(async () => {
-    await NpmUtil.installPackages();
+    await PackageUtil.installPackages();
   }, {
     startText: 'Installing dependencies...',
     successText: 'Installed dependencies.',
