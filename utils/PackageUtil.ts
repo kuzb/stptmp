@@ -1,4 +1,5 @@
 import FileUtil from '/utils/FileUtil.ts';
+import ExecUtil from '/utils/ExecUtil.ts';
 import DevelopmentError from '/libs/DevelopmentError.ts';
 
 class PackageUtil {
@@ -12,27 +13,11 @@ class PackageUtil {
   }
 
   private static async npmInstall() {
-    const process = Deno.run({
-      cmd: ['npm', 'install'],
-      stdout: 'piped',
-      stderr: 'piped',
-    });
-
-    const { code } = await process.status();
-
-    if (code !== 0) throw new DevelopmentError(new TextDecoder().decode(await process.stderrOutput()));
+    await ExecUtil.single(['npm', 'install']);
   }
 
   private static async yarnInstall() {
-    const process = Deno.run({
-      cmd: ['yarn', 'install'],
-      stdout: 'piped',
-      stderr: 'piped',
-    });
-
-    const { code } = await process.status();
-
-    if (code !== 0) throw new DevelopmentError(new TextDecoder().decode(await process.stderrOutput()));
+    await ExecUtil.single(['yarn', 'install']);
   }
 }
 

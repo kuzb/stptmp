@@ -1,6 +1,6 @@
 import { Octokit as OctokitCore, RestEndpointMethodTypes } from 'octokit';
 
-import DevelopmentError from '/libs/DevelopmentError.ts';
+import ExecUtil from '/utils/ExecUtil.ts';
 
 export type Repos = RestEndpointMethodTypes['repos']['listForUser']['response']['data'];
 
@@ -25,41 +25,15 @@ class Git extends OctokitCore {
   }
 
   async clone(url: string, name: string): Promise<void> {
-    const process = Deno.run({
-      cmd: ['git', 'clone', url, name],
-      stdout: 'piped',
-      stderr: 'piped',
-    });
-
-    const { code } = await process.status();
-
-    if (code !== 0) throw new DevelopmentError(new TextDecoder().decode(await process.stderrOutput()));
+    await ExecUtil.single(['git', 'clone', url, name]);
   }
 
   async init(): Promise<void> {
-    const initProcess = Deno.run({
-      cmd: ['git', 'init'],
-      stdout: 'piped',
-      stderr: 'piped',
-    });
-
-    const { code: initCode } = await initProcess.status();
-
-    if (initCode !== 0) {
-      throw new DevelopmentError(new TextDecoder().decode(await initProcess.stderrOutput()));
-    }
-
-    const commitProcess = Deno.run({
-      cmd: ['git', 'commit', '-m', 'chore: initialize project'],
-      stdout: 'piped',
-      stderr: 'piped',
-    });
-
-    const { code: commitCode } = await commitProcess.status();
-
-    if (commitCode !== 0) {
-      throw new DevelopmentError(new TextDecoder().decode(await commitProcess.stderrOutput()));
-    }
+    await ExecUtil.sequence([
+      ['git', 'init'],
+      ['git', 'add', '.'],
+      ['git', 'commit', '-m', '"chore: initial commit"'],
+    ]);
   }
 }
 
